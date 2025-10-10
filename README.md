@@ -1,0 +1,5 @@
+"# FCAI Image Filters Project - Section 18" 
+"Team Members:" 
+"- Ramez Rizk Hassan (20240185)" 
+"- Nour Khalaf Ahmed (20240636)" 
+"- Ahmed Yasser Nada (20240824)" 
