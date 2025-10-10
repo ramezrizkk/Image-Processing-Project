@@ -179,6 +179,24 @@ void saveImage(Image& image) {
     } while (!isSaved);
 }
 
+// Filter 1
+void applyGrayscale(Image& image) {
+    cout << "Applying Grayscale Filter..." << endl;
+    for (int i = 0; i < image.width; ++i) {
+        for (int j = 0; j < image.height; ++j) {
+            unsigned int avg = 0;
+            for (int k = 0; k < 3; ++k) {
+                avg += image(i, j, k);
+            }
+            avg /= 3;
+            for (int k = 0; k < 3; ++k) {
+                image(i, j, k) = avg;
+            }
+        }
+    }
+    cout << "Grayscale Filter applied successfully." << endl;
+}
+
 // Filter 3
 void applyInvert(Image& image) {
     cout << "Applying Invert Filter..." << endl;
@@ -191,6 +209,81 @@ void applyInvert(Image& image) {
     }
     cout << "Invert Filter applied successfully." << endl;
 }
+
+
+// helping func. of the merge
+Image resizeForMerge(const Image& original, int newWidth, int newHeight) { 
+    Image resized(newWidth, newHeight);
+    for (int i = 0; i < newWidth; ++i) {
+        for (int j = 0; j < newHeight; ++j) {
+            int orig_i = i * original.width / newWidth;
+            int orig_j = j * original.height / newHeight;
+            for (int k = 0; k < 3; ++k) {
+                resized(i, j, k) = original(orig_i, orig_j, k);
+            }
+        }
+    }
+    return resized;
+}
+
+// Filter 4
+void applyMerge(Image& image) {
+    cout << "Applying Merge Filter..." << endl;
+    Image image2;
+    cout << "Loading the second image for merging..." << endl;
+    loadImage(image2);
+    Image resultImage;
+
+    if (image.width == image2.width && image.height == image2.height) {
+        resultImage = Image(image.width, image.height);
+        for (int i = 0; i < image.width; ++i) {
+            for (int j = 0; j < image.height; ++j) {
+                for (int k = 0; k < 3; ++k) {
+                    resultImage(i, j, k) = (image(i, j, k) + image2(i, j, k)) / 2;
+                }
+            }
+        }
+    } else {
+        int choice;
+        cout << "Images have different sizes. Please choose an option:" << endl;
+        cout << "1. Resize both to the largest dimensions and then merge." << endl;
+        cout << "2. Merge the common smaller area." << endl;
+        cout << "Enter your choice (1 or 2): ";
+        cin >> choice;
+
+        if (choice == 1) {
+            int maxWidth = max(image.width, image2.width);
+            int maxHeight = max(image.height, image2.height);
+            Image resized1 = resizeForMerge(image, maxWidth, maxHeight);
+            Image resized2 = resizeForMerge(image2, maxWidth, maxHeight);
+            resultImage = Image(maxWidth, maxHeight);
+            for (int i = 0; i < maxWidth; ++i) {
+                for (int j = 0; j < maxHeight; ++j) {
+                    for (int k = 0; k < 3; ++k) {
+                        resultImage(i, j, k) = (resized1(i, j, k) + resized2(i, j, k)) / 2;
+                    }
+                }
+            }
+        } else if (choice == 2) {
+            int commonWidth = min(image.width, image2.width);
+            int commonHeight = min(image.height, image2.height);
+            resultImage = Image(commonWidth, commonHeight);
+            for (int i = 0; i < commonWidth; ++i) {
+                for (int j = 0; j < commonHeight; ++j) {
+                    for (int k = 0; k < 3; ++k) {
+                        resultImage(i, j, k) = (image(i, j, k) + image2(i, j, k)) / 2;
+                    }
+                }
+            }
+        } else {
+            cout << "Invalid choice! Returning to main menu." << endl;
+            return;
+        }
+    }
+    image = resultImage;
+    cout << "Merge Filter applied successfully." << endl;
+}
+
 
 // Filter 6
 void applyRotate(Image& image) {
@@ -240,6 +333,44 @@ void applyRotate(Image& image) {
     }
 }
 
+// Filter 7
+void applyDarkenAndLighten(Image& image) {
+    cout << "Applying Darken/Lighten Filter..." << endl;
+    int choice;
+    cout << "Select your choice:" << endl;
+    cout << "1. Darken the image by 50%" << endl;
+    cout << "2. Lighten the image by 50%" << endl;
+    cout << "Your choice: ";
+    cin >> choice;
+
+    if (choice == 1) {
+        for (int i = 0; i < image.width; ++i) {
+            for (int j = 0; j < image.height; ++j) {
+                for (int k = 0; k < 3; ++k) {
+                    image(i, j, k) *= 0.5;
+                }
+            }
+        }
+        cout << "Image darkened successfully." << endl;
+    } else if (choice == 2) {
+        for (int i = 0; i < image.width; ++i) {
+            for (int j = 0; j < image.height; ++j) {
+                for (int k = 0; k < 3; ++k) {
+                    int newValue = image(i, j, k) * 1.5;
+                    if (newValue > 255) {
+                        image(i, j, k) = 255;
+                    } else {
+                        image(i, j, k) = newValue;
+                    }
+                }
+            }
+        }
+        cout << "Image lightened successfully." << endl;
+    } else {
+        cout << "Invalid choice. No filter applied." << endl;
+    }
+}
+
 // Filter 9
 void applyFrame(Image& image) {
     cout << "Applying Frame Filter..." << endl;
@@ -273,6 +404,76 @@ void applyFrame(Image& image) {
         }
     }
     cout << "Frame applied successfully." << endl;
+}
+
+// Filter 10
+void applyEdgeDetection(Image& image) {
+    cout << "Applying Edge Detection Filter..." << endl;
+
+    // temp black and white version
+    Image bwImage = image;
+    for (int i = 0; i < bwImage.width; ++i) {
+        for (int j = 0; j < bwImage.height; ++j) {
+            unsigned int avg = 0;
+            for (int k = 0; k < 3; ++k) {
+                avg += bwImage(i, j, k);
+            }
+            avg /= 3;
+            unsigned char newValue;
+            if(avg < 128)
+            {
+                newValue = 0;
+            }
+
+            else
+            {
+                newValue = 255;
+            }
+
+            for (int k = 0; k < 3; ++k) {
+                bwImage(i, j, k) = newValue;
+            }
+        }
+    }
+
+    Image edgeImage(image.width, image.height);
+    // checking neighbours with arrs
+    int dx[] = {-1, -1, -1, 0, 0, 1, 1, 1};
+    int dy[] = {-1, 0, 1, -1, 1, -1, 0, 1};
+
+    for (int i = 1; i < image.width - 1; ++i) {
+        for (int j = 1; j < image.height - 1; ++j) {
+            bool is_edge = false;
+            int current_pixel = bwImage(i, j, 0);
+
+            // real checking ^_^
+            for (int dir = 0; dir < 8; ++dir) {
+                int nx = i + dx[dir];
+                int ny = j + dy[dir];
+                if (current_pixel != bwImage(nx, ny, 0)) {
+                    is_edge = true;
+                    break;
+                }
+            }
+
+            unsigned char color;
+            if(is_edge)
+            {
+                color = 0;
+            }
+
+            else
+            {
+                color = 255;
+            }
+
+            for (int k = 0; k < 3; ++k) {
+                edgeImage(i, j, k) = color;
+            }
+        }
+    }
+    image = edgeImage;
+    cout << "Edge Detection Filter applied successfully." << endl;
 }
 
 // Filter 12
@@ -327,4 +528,29 @@ void applyTVSnow(Image& image) {
         }
     }
     cout << "Old TV Filter applied successfully." << endl;
+}
+
+// Filter 16
+void applyPurple(Image& image) {
+    cout << "Applying Purple Filter..." << endl;
+    for (int i = 0; i < image.width; ++i) {
+        for (int j = 0; j < image.height; ++j) {
+            int r = image(i, j, 0);
+            int g = image(i, j, 1);
+            int b = image(i, j, 2);
+
+            int newr = r * 1.2;
+            int newg = g * 0.8;
+            int newb = b * 1.3;
+
+            if (newr > 255) newr = 255;
+            if (newg > 255) newg = 255;
+            if (newb > 255) newb = 255;
+
+            image(i, j, 0) = newr;
+            image(i, j, 1) = newg;
+            image(i, j, 2) = newb;
+        }
+    }
+    cout << "Purple Filter applied successfully." << endl;
 }
