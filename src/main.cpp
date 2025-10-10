@@ -197,6 +197,25 @@ void applyGrayscale(Image& image) {
     cout << "Grayscale Filter applied successfully." << endl;
 }
 
+// Filter 2
+void applyBlackAndWhite(Image& image) {
+    cout << "Applying Black and White Filter..." << endl;
+    for (int i = 0; i < image.width; ++i) {
+        for (int j = 0; j < image.height; ++j) {
+            unsigned int avg = 0;
+            for (int k = 0; k < 3; ++k) {
+                avg += image(i, j, k);
+            }
+            avg /= 3;
+            unsigned char newValue = (avg < 128) ? 0 : 255;
+            for (int k = 0; k < 3; ++k) {
+                image(i, j, k) = newValue;
+            }
+        }
+    }
+    cout << "Black and White Filter applied successfully." << endl;
+}
+
 // Filter 3
 void applyInvert(Image& image) {
     cout << "Applying Invert Filter..." << endl;
@@ -284,6 +303,29 @@ void applyMerge(Image& image) {
     cout << "Merge Filter applied successfully." << endl;
 }
 
+// Filter 5
+void applyFlip(Image& image) {
+    cout << "Applying Flip Filter..." << endl;
+    Image flippedImage(image.width, image.height);
+    char type;
+    cout << "Enter (H) for Horizontal Flip or (V) for Vertical Flip: ";
+    cin >> type;
+    for (int i = 0; i < image.width; ++i) {
+        for (int j = 0; j < image.height; ++j) {
+            if (type == 'V' || type == 'v') {
+                for (int k = 0; k < 3; ++k) {
+                    flippedImage(i, image.height - 1 - j, k) = image(i, j, k);
+                }
+            } else if (type == 'H' || type == 'h') {
+                for (int k = 0; k < 3; ++k) {
+                    flippedImage(image.width - 1 - i, j, k) = image(i, j, k);
+                }
+            }
+        }
+    }
+    image = flippedImage;
+    cout << "Flip Filter applied successfully." << endl;
+}
 
 // Filter 6
 void applyRotate(Image& image) {
@@ -369,6 +411,56 @@ void applyDarkenAndLighten(Image& image) {
     } else {
         cout << "Invalid choice. No filter applied." << endl;
     }
+}
+
+// Filter 8
+void applyCrop(Image& image) {
+    cout << "Applying Crop Filter..." << endl;
+    int x, y, w, h;
+    
+    cout << "Current image dimensions: " << image.width << "x" << image.height << endl;
+    cout << "Enter The (X, Y) as the starting point (upper left corner):" << endl;
+    cout << "X: ";
+    cin >> x;
+    cout << "Y: ";
+    cin >> y;
+    
+    // the start point (x,y)
+    if (x < 0 || y < 0 || x >= image.width || y >= image.height) {
+        cout << "Error: Starting point is outside the image boundaries!" << endl;
+        return;
+    }
+    
+    cout << "Enter The (W, H) as The Dimensions of The Area to Cut:" << endl;
+    cout << "Width: ";
+    cin >> w;
+    cout << "Height: ";
+    cin >> h;
+    
+    // chek if the diemntions are correct
+    if (w <= 0 || h <= 0) {
+        cout << "Error: Width and Height must be positive numbers!" << endl;
+        return;
+    }
+    
+    if (x + w > image.width || y + h > image.height) {
+        cout << "Error: The crop area exceeds image boundaries!" << endl;
+        cout << "Maximum width from X=" << x << " is " << (image.width - x) << endl;
+        cout << "Maximum height from Y=" << y << " is " << (image.height - y) << endl;
+        return;
+    }
+    
+    Image croppedImage(w, h);
+    for (int i = 0; i < w; ++i) {
+        for (int j = 0; j < h; ++j) {
+            for (int k = 0; k < 3; ++k) {
+                croppedImage(i, j, k) = image(x + i, y + j, k);
+            }
+        }
+    }
+    
+    image = croppedImage;
+    cout << "Crop Filter applied successfully. New dimensions: " << w << "x" << h << endl;
 }
 
 // Filter 9
@@ -476,6 +568,54 @@ void applyEdgeDetection(Image& image) {
     cout << "Edge Detection Filter applied successfully." << endl;
 }
 
+// Filter 11
+void applyResize(Image& image) {
+    cout << "Applying Resize Filter..." << endl;
+    int newWidth, newHeight;
+    
+    cout << "Current image dimensions: " << image.width << "x" << image.height << endl;
+    cout << "Enter new width: ";
+    cin >> newWidth;
+    cout << "Enter new height: ";
+    cin >> newHeight;
+    
+    if (newWidth <= 0 || newHeight <= 0) {
+        cout << "Error: Width and Height must be positive numbers!" << endl;
+        return;
+    }
+    
+    if (newWidth > 10000 || newHeight > 10000) {
+        cout << "Warning: Very large dimensions may cause memory issues." << endl;
+        char confirm;
+        cout << "Continue? (y/n): ";
+        cin >> confirm;
+        if (confirm != 'y' && confirm != 'Y') {
+            return;
+        }
+    }
+    
+    Image resized(newWidth, newHeight);
+    float x_ratio = (float)image.width / newWidth;
+    float y_ratio = (float)image.height / newHeight;
+    
+    for (int i = 0; i < newWidth; ++i) {
+        for (int j = 0; j < newHeight; ++j) {
+            int srcX = (int)(i * x_ratio);
+            int srcY = (int)(j * y_ratio);
+            
+            if (srcX >= image.width) srcX = image.width - 1;
+            if (srcY >= image.height) srcY = image.height - 1;
+            
+            for (int c = 0; c < 3; ++c) {
+                resized(i, j, c) = image(srcX, srcY, c);
+            }
+        }
+    }
+    
+    image = resized;
+    cout << "Resize Filter applied successfully. New dimensions: " << newWidth << "x" << newHeight << endl;
+}
+
 // Filter 12
 void applyBlur(Image& image) {
     cout << "Applying Blur Filter..." << endl;
@@ -510,6 +650,41 @@ void applyBlur(Image& image) {
     }
     image = blurredImage;
     cout << "Blur filter applied successfully." << endl;
+}
+
+// Filter 13
+void applySunlight(Image& image) {
+    cout << "Applying Sunlight Enhancement Filter..." << endl;
+    cout << "This filter enhances natural sunlight in the image (Wano Filter 13)" << endl;
+    
+    for (int i = 0; i < image.width; ++i) {
+        for (int j = 0; j < image.height; ++j) {
+            int r = image(i, j, 0);
+            int g = image(i, j, 1);
+            int b = image(i, j, 2);
+            
+            r = r * 1.3;
+            g = g * 1.3;
+            b = b * 1.2;  
+            
+            r += 20;  
+            g += 15;  
+            
+            if (r > 255) r = 255;
+            if (r < 0) r = 0;
+            if (g > 255) g = 255;
+            if (g < 0) g = 0;
+            if (b > 255) b = 255;
+            if (b < 0) b = 0;
+            
+            image(i, j, 0) = r;
+            image(i, j, 1) = g;
+            image(i, j, 2) = b;
+        }
+    }
+    
+    cout << "Sunlight Enhancement Filter applied successfully." << endl;
+    cout << "The image now has better natural sunlight!" << endl;
 }
 
 // Filter 15
