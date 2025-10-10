@@ -178,3 +178,153 @@ void saveImage(Image& image) {
         }
     } while (!isSaved);
 }
+
+// Filter 3
+void applyInvert(Image& image) {
+    cout << "Applying Invert Filter..." << endl;
+    for (int i = 0; i < image.width; ++i) {
+        for (int j = 0; j < image.height; ++j) {
+            for (int k = 0; k < image.channels; ++k) {
+                image(i, j, k) = 255 - image(i, j, k);
+            }
+        }
+    }
+    cout << "Invert Filter applied successfully." << endl;
+}
+
+// Filter 6
+void applyRotate(Image& image) {
+    cout << "Applying Rotate Filter..." << endl;
+    string choice;
+    cout << "Rotate (90), (180), or (270) degrees clockwise? ";
+    cin >> choice;
+
+    int oldWidth = image.width;
+    int oldHeight = image.height;
+
+    if (choice == "90") {
+        Image rotatedImage(oldHeight, oldWidth);
+        for (int i = 0; i < oldWidth; ++i) {
+            for (int j = 0; j < oldHeight; ++j) {
+                for (int k = 0; k < image.channels; ++k) {
+                    rotatedImage((oldHeight - 1) - j, i, k) = image(i, j, k);
+                }
+            }
+        }
+        image = rotatedImage;
+        cout << "Image rotated 90 degrees clockwise successfully." << endl;
+    } else if (choice == "180") {
+        Image rotatedImage(oldWidth, oldHeight);
+        for (int i = 0; i < oldWidth; ++i) {
+            for (int j = 0; j < oldHeight; ++j) {
+                for (int k = 0; k < image.channels; ++k) {
+                    rotatedImage((oldWidth - 1) - i, (oldHeight - 1) - j, k) = image(i, j, k);
+                }
+            }
+        }
+        image = rotatedImage;
+        cout << "Image rotated 180 degrees clockwise successfully." << endl;
+    } else if (choice == "270") {
+        Image rotatedImage(oldHeight, oldWidth);
+        for (int i = 0; i < oldWidth; ++i) {
+            for (int j = 0; j < oldHeight; ++j) {
+                for (int k = 0; k < image.channels; ++k) {
+                    rotatedImage(j, (oldWidth - 1) - i, k) = image(i, j, k);
+                }
+            }
+        }
+        image = rotatedImage;
+        cout << "Image rotated 270 degrees clockwise successfully." << endl;
+    } else {
+        cout << "Invalid rotation angle. Please choose 90, 180, or 270." << endl;
+    }
+}
+
+// Filter 9
+void applyFrame(Image& image) {
+    cout << "Applying Frame Filter..." << endl;
+    unsigned char frameR, frameG, frameB;
+    char colorChoice;
+    cout << "Choose frame color (r)ed, (g)reen, or (b)lue: ";
+    cin >> colorChoice;
+    switch (tolower(colorChoice)) {
+        case 'r': frameR = 255; frameG = 0; frameB = 0; break;
+        case 'g': frameR = 0; frameG = 255; frameB = 0; break;
+        case 'b': frameR = 0; frameG = 0; frameB = 255; break;
+        default:
+            cout << "Invalid color. Defaulting to black." << endl;
+            frameR = 0; frameG = 0; frameB = 0;
+            break;
+    }
+    int frameSize;
+    cout << "Enter frame thickness (e.g., 10): ";
+    cin >> frameSize;
+    if (frameSize <= 0 || frameSize * 2 >= image.width || frameSize * 2 >= image.height) {
+        cout << "Invalid frame size. It's either too small or too large for the image." << endl;
+        return;
+    }
+    for (int i = 0; i < image.width; ++i) {
+        for (int j = 0; j < image.height; ++j) {
+            if (i < frameSize || i >= (image.width - frameSize) || j < frameSize || j >= (image.height - frameSize)) {
+                image(i, j, 0) = frameR;
+                image(i, j, 1) = frameG;
+                image(i, j, 2) = frameB;
+            }
+        }
+    }
+    cout << "Frame applied successfully." << endl;
+}
+
+// Filter 12
+void applyBlur(Image& image) {
+    cout << "Applying Blur Filter..." << endl;
+    int radius;
+    cout << "Enter blur radius (1 for a light blur, 15 for a strong blur): ";
+    cin >> radius;
+    if (radius < 1) {
+        cout << "Invalid radius. Please enter a number greater than 0." << endl;
+        return;
+    }
+    Image blurredImage(image.width, image.height);
+    for (int i = 0; i < image.width; ++i) {
+        for (int j = 0; j < image.height; ++j) {
+            long sumR = 0, sumG = 0, sumB = 0;
+            int pixelCount = 0;
+            for (int x = -radius; x <= radius; ++x) {
+                for (int y = -radius; y <= radius; ++y) {
+                    int neighborI = i + x;
+                    int neighborJ = j + y;
+                    if (neighborI >= 0 && neighborI < image.width && neighborJ >= 0 && neighborJ < image.height) {
+                        sumR += image(neighborI, neighborJ, 0);
+                        sumG += image(neighborI, neighborJ, 1);
+                        sumB += image(neighborI, neighborJ, 2);
+                        pixelCount++;
+                    }
+                }
+            }
+            blurredImage(i, j, 0) = sumR / pixelCount;
+            blurredImage(i, j, 1) = sumG / pixelCount;
+            blurredImage(i, j, 2) = sumB / pixelCount;
+        }
+    }
+    image = blurredImage;
+    cout << "Blur filter applied successfully." << endl;
+}
+
+// Filter 15
+void applyTVSnow(Image& image) {
+    cout << "Applying Old TV Filter..." << endl;
+    for (int i = 0; i < image.width; ++i) {
+        for (int j = 0; j < image.height; ++j) {
+            for (int k = 0; k < 3; ++k) {
+                int originalValue = image(i, j, k);
+                int disturbance = (rand() % 101) - 50;
+                int newValue = originalValue + disturbance;
+                if (newValue > 255) newValue = 255;
+                if (newValue < 0) newValue = 0;
+                image(i, j, k) = (unsigned char)newValue;
+            }
+        }
+    }
+    cout << "Old TV Filter applied successfully." << endl;
+}
